@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step-by-Step Drawing Guide</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0e0e14;
+            --surface: #16162a;
+            --surface-2: #1e1e3a;
+            --accent: #7c5cfc;
+            --accent-glow: rgba(124, 92, 252, .3);
+            --text: #e8e6f2;
+            --text-dim: #9590b5;
+            --success: #34d399;
+            --danger: #f87171;
+            --radius: 14px;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            width: 100%;
+            padding: 20px 24px;
+            background: linear-gradient(135deg, var(--surface), var(--surface-2));
+            border-bottom: 1px solid rgba(124, 92, 252, .12);
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #7c5cfc, #b794f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            color: var(--text-dim);
+            font-size: .85rem;
+            margin-top: 4px;
+        }
+
+        main {
+            width: 100%;
+            max-width: 1000px;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid rgba(124, 92, 252, .08);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+
+        .card h2 {
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card h2 .step-badge {
+            background: var(--accent);
+            color: #fff;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .7rem;
+            font-weight: 700;
+        }
+
+        /* Dropzone */
+        .dropzone {
+            border: 2px dashed rgba(124, 92, 252, .25);
+            border-radius: var(--radius);
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .25s;
+        }
+
+        .dropzone:hover,
+        .dropzone.dragover {
+            border-color: var(--accent);
+            background: rgba(124, 92, 252, .04);
+            box-shadow: 0 0 24px var(--accent-glow);
+        }
+
+        .dropzone input {
+            display: none;
+        }
+
+        .dropzone .icon {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .dropzone .label {
+            color: var(--text-dim);
+            font-size: .85rem;
+        }
+
+        .dropzone .label strong {
+            color: var(--accent);
+        }
+
+        /* Preview */
+        #preview-area {
+            display: none;
+            margin-top: 14px;
+            gap: 14px;
+            align-items: center;
+        }
+
+        #preview-area.show {
+            display: flex;
+        }
+
+        #preview-img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 2px solid var(--accent);
+        }
+
+        #preview-info .name {
+            font-weight: 600;
+            font-size: .9rem;
+        }
+
+        #preview-info .size {
+            color: var(--text-dim);
+            font-size: .8rem;
+        }
+
+        /* Settings row */
+        .settings-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .setting-group {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .setting-group label {
+            display: block;
+            font-size: .75rem;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+
+        .setting-group select {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(124, 92, 252, .15);
+            background: var(--surface-2);
+            color: var(--text);
+            font-size: .85rem;
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: .95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .25s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #9b7dfc);
+            color: #fff;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        .btn:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+
+        /* Status */
+        #status {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: .85rem;
+            display: none;
+            margin-top: 10px;
+            animation: fadeIn .3s;
+        }
+
+        #status.info {
+            display: block;
+            background: rgba(124, 92, 252, .08);
+            border-left: 3px solid var(--accent);
+        }
+
+        #status.ok {
+            display: block;
+            background: rgba(52, 211, 153, .08);
+            border-left: 3px solid var(--success);
+            color: var(--success);
+        }
+
+        #status.error {
+            display: block;
+            background: rgba(248, 113, 113, .08);
+            border-left: 3px solid var(--danger);
+            color: var(--danger);
+        }
+
+        /* ══ Step Viewer ══ */
+        #step-viewer {
+            display: none;
+        }
+
+        #step-viewer.show {
+            display: block;
+        }
+
+        .step-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            gap: 10px;
+        }
+
+        .step-nav button {
+            padding: 10px 20px;
+            border: 1px solid rgba(124, 92, 252, .2);
+            border-radius: 8px;
+            background: var(--surface-2);
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: .85rem;
+            transition: all .2s;
+        }
+
+        .step-nav button:hover:not(:disabled) {
+            border-color: var(--accent);
+            background: rgba(124, 92, 252, .1);
+        }
+
+        .step-nav button:disabled {
+            opacity: .3;
+            cursor: not-allowed;
+        }
+
+        .step-counter {
+            font-size: .9rem;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .step-meta {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .step-meta .tag {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: .75rem;
+            font-weight: 600;
+            background: var(--surface-2);
+            color: var(--accent);
+        }
+
+        .step-description {
+            font-size: .85rem;
+            color: var(--text-dim);
+            margin-bottom: 14px;
+            padding: 8px 12px;
+            border-left: 3px solid var(--accent);
+            background: rgba(124, 92, 252, .04);
+            border-radius: 0 8px 8px 0;
+        }
+
+        #step-image-container {
+            text-align: center;
+            background: var(--surface-2);
+            border-radius: var(--radius);
+            padding: 12px;
+            border: 1px solid rgba(124, 92, 252, .06);
+        }
+
+        #step-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        /* Reference image */
+        .ref-panel {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            width: 120px;
+            z-index: 100;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid var(--accent);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .5);
+            cursor: pointer;
+            transition: all .3s;
+        }
+
+        .ref-panel:hover {
+            width: 200px;
+        }
+
+        .ref-panel img {
+            width: 100%;
+            display: block;
+        }
+
+        .ref-panel .label {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            font-size: .55rem;
+            background: rgba(0, 0, 0, .6);
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>✏️ Step-by-Step Drawing Guide</h1>
+        <p>Upload a reference image → get progressive drawing steps on a grid canvas</p>
+    </header>
+
+    <main>
+        <!-- Upload -->
+        <div class="card" id="upload-card">
+            <h2><span class="step-badge">1</span> Upload Reference Image</h2>
+            <div class="dropzone" id="dropzone">
+                <div class="icon">📤</div>
+                <div class="label">Drag & drop or <strong>click to browse</strong></div>
+                <div class="label" style="margin-top:4px;font-size:.75rem">JPEG · PNG · WebP · BMP (max 20 MB)</div>
+                <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp,image/bmp">
+            </div>
+            <div id="preview-area">
+                <img id="preview-img" src="" alt="preview">
+                <div id="preview-info">
+                    <div class="name" id="file-name">—</div>
+                    <div class="size" id="file-size">—</div>
+                </div>
+            </div>
+            <div id="status"></div>
+            <button class="btn btn-primary" id="upload-btn" disabled style="margin-top:14px">Upload Image</button>
+        </div>
+
+        <!-- Settings & Generate -->
+        <div class="card" id="generate-card" style="display:none">
+            <h2><span class="step-badge">2</span> Configure & Generate</h2>
+            <div class="settings-row">
+                <div class="setting-group">
+                    <label for="paper-size">Paper Size</label>
+                    <select id="paper-size">
+                        <option value="A4" selected>A4 (Portrait)</option>
+                        <option value="A3">A3 (Portrait)</option>
+                        <option value="square">Square</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="grid-cells">Grid Density</label>
+                    <select id="grid-cells">
+                        <option value="4">4 × 4 (Simple)</option>
+                        <option value="8" selected>8 × 8 (Standard)</option>
+                        <option value="12">12 × 12 (Detailed)</option>
+                        <option value="16">16 × 16 (Fine)</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="generate-btn">⚙️ Generate Drawing Steps</button>
+        </div>
+
+        <!-- Step Viewer -->
+        <div class="card" id="step-viewer">
+            <h2><span class="step-badge">3</span> Drawing Steps</h2>
+
+            <div class="step-nav">
+                <button id="prev-btn" disabled>← Previous</button>
+                <span class="step-counter" id="step-counter">Step 0 of 0</span>
+                <button id="next-btn" disabled>Next →</button>
+            </div>
+
+            <div class="step-meta" id="step-meta"></div>
+            <div class="step-description" id="step-desc"></div>
+
+            <div id="step-image-container">
+                <img id="step-image" src="" alt="Drawing step">
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating reference image -->
+    <div class="ref-panel" id="ref-panel" style="display:none">
+        <span class="label">Reference</span>
+        <img id="ref-img" src="" alt="Reference">
+    </div>
+
+    <script>
+        const API = window.location.origin;
+        let selectedFile = null;
+        let drawingId = null;
+        let stepsData = [];
+        let currentStep = 0;
+
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('file-input');
+        const previewArea = document.getElementById('preview-area');
+        const previewImg = document.getElementById('preview-img');
+        const fileName = document.getElementById('file-name');
+        const fileSize = document.getElementById('file-size');
+        const uploadBtn = document.getElementById('upload-btn');
+        const generateCard = document.getElementById('generate-card');
+        const generateBtn = document.getElementById('generate-btn');
+        const statusEl = document.getElementById('status');
+        const stepViewer = document.getElementById('step-viewer');
+        const stepImage = document.getElementById('step-image');
+        const stepCounter = document.getElementById('step-counter');
+        const stepMeta = document.getElementById('step-meta');
+        const stepDesc = document.getElementById('step-desc');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const refPanel = document.getElementById('ref-panel');
+        const refImg = document.getElementById('ref-img');
+
+        // ── Dropzone ──
+        dropzone.addEventListener('click', () => fileInput.click());
+        dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+        dropzone.addEventListener('drop', e => {
+            e.preventDefault(); dropzone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        });
+        fileInput.addEventListener('change', () => { if (fileInput.files.length) handleFile(fileInput.files[0]); });
+
+        function handleFile(file) {
+            selectedFile = file;
+            previewImg.src = URL.createObjectURL(file);
+            refImg.src = previewImg.src;
+            fileName.textContent = file.name;
+            fileSize.textContent = (file.size / 1024).toFixed(1) + ' KB';
+            previewArea.classList.add('show');
+            uploadBtn.disabled = false;
+            setStatus('', '');
+            generateCard.style.display = 'none';
+            stepViewer.classList.remove('show');
+            refPanel.style.display = 'none';
+        }
+
+        // ── Upload ──
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+            uploadBtn.disabled = true;
+            setStatus('Uploading...', 'info');
+            const form = new FormData();
+            form.append('file', selectedFile);
+            try {
+                const res = await fetch(`${API}/api/upload`, { method: 'POST', body: form });
+                if (!res.ok) {
+                    const e = await res.json().catch(() => ({}));
+                    throw new Error(e.detail || `Upload failed (${res.status})`);
+                }
+                const data = await res.json();
+                drawingId = data.id;
+                setStatus('✅ Uploaded successfully!', 'ok');
+                generateCard.style.display = 'block';
+                generateCard.scrollIntoView({ behavior: 'smooth' });
+            } catch (err) {
+                setStatus(`❌ ${err.message}`, 'error');
+            } finally { uploadBtn.disabled = false; }
+        });
+
+        // ── Generate ──
+        generateBtn.addEventListener('click', async () => {
+            if (!drawingId) return;
+            generateBtn.disabled = true;
+            generateBtn.textContent = '⏳ Generating steps...';
+            setStatus('Analyzing contours and rendering step images...', 'info');
+
+            const paperSize = document.getElementById('paper-size').value;
+            const gridCells = parseInt(document.getElementById('grid-cells').value);
+
+            try {
+                const res = await fetch(`${API}/api/blueprint/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ drawing_id: drawingId, paper_size: paperSize, grid_cells: gridCells }),
+                });
+                if (!res.ok) {
+                    const e = await res.json().catch(() => ({}));
+                    throw new Error(e.detail || `Generation failed (${res.status})`);
+                }
+                const data = await res.json();
+
+                // Validate response has steps
+                if (!data.steps || !Array.isArray(data.steps) || data.steps.length === 0) {
+                    throw new Error('Server returned no drawing steps. Please try a different image.');
+                }
+
+                stepsData = data.steps;
+                currentStep = 0;
+                showStep(0);
+                stepViewer.classList.add('show');
+                refPanel.style.display = 'block';
+                setStatus(`✅ Generated ${data.total_steps} drawing steps!`, 'ok');
+                stepViewer.scrollIntoView({ behavior: 'smooth' });
+            } catch (err) {
+                setStatus(`❌ ${err.message}`, 'error');
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = '⚙️ Generate Drawing Steps';
+            }
+        });
+
+        // ── Step navigation ──
+        prevBtn.addEventListener('click', () => { if (currentStep > 0) showStep(currentStep - 1); });
+        nextBtn.addEventListener('click', () => { if (currentStep < stepsData.length - 1) showStep(currentStep + 1); });
+
+        function showStep(idx) {
+            currentStep = idx;
+            const s = stepsData[idx];
+            stepImage.src = `${API}${s.image_url}`;
+            stepCounter.textContent = `Step ${s.step_number} of ${stepsData.length - 1}`;
+            stepDesc.textContent = s.description;
+
+            stepMeta.innerHTML = '';
+            addTag(s.phase_name);
+            if (s.is_shading_step) addTag('🎨 Shading');
+            if (s.new_contour_count > 0) addTag(`+${s.new_contour_count} new strokes`);
+            addTag(`${s.total_contours_so_far} total`);
+
+            prevBtn.disabled = idx === 0;
+            nextBtn.disabled = idx === stepsData.length - 1;
+        }
+
+        function addTag(text) {
+            const el = document.createElement('span');
+            el.className = 'tag';
+            el.textContent = text;
+            stepMeta.appendChild(el);
+        }
+
+        function setStatus(msg, type) {
+            statusEl.textContent = msg;
+            statusEl.className = type;
+        }
+    </script>
+</body>
+
+</html>
